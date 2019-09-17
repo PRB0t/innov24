@@ -1,0 +1,56 @@
+# Innov24 Configuration File
+
+export INNOV24=""
+export COMPOSE_HTTP_TIMEOUT=120 # Increase for slow network. Default is 60
+
+# ESB Network
+export INNOV24_ESB_NET="10.24.1.0/24"
+
+#######################################
+
+# Identity Network
+export INNOV24_IDENTITY_NET="10.24.2.0/24"
+
+# Identity Server
+export INNOV24_IDENTITY_PORT_UNSECURE=9763
+export INNOV24_IDENTITY_PORT_SECURE=9443
+export INNOV24_IDENTITY_IP="10.24.2.2"
+
+# Mysql for Identity Server
+export INNOV24_IDENTITY_MYSQL_PORT=3306
+export INNOV24_IDENTITY_MYSQL_IP="10.24.2.3"
+
+# Identity Server Analytics Worker
+export INNOV24_IDENTITY_ANALYTICS_WORKER1_PORT=9091
+export INNOV24_IDENTITY_ANALYTICS_WORKER2_PORT=9444
+export INNOV24_IDENTITY_ANALYTICS_WORKERS_IP="10.24.2.4"
+
+# Identity Server Analytics Dashboard
+export INNOV24_IDENTITY_ANALYTICS_DASHBOARD_PORT=9643
+export INNOV24_IDENTITY_ANALYTICS_DASHBOARD_IP="10.24.2.5"
+
+#######################################
+
+# Socialnetwork Network
+export INNOV24_SOCIALNETWORK_NET="10.24.3.0/24"
+
+# Socialnetwork
+export INNOV24_SOCIALNETWORK_PORT=80
+export INNOV24_SOCIALNETWORK_IP="10.24.3.2"
+
+#######################################
+
+# Marketplace Network
+export INNOV24_MARKETPLACE_NET="10.24.4.0/24"
+
+# Marketplace
+export INNOV24_MARKETPLACE_PORT=80
+export INNOV24_MARKETPLACE_IP="10.24.4.2"
+
+# Mysql for Marketplace
+export INNOV24_MARKETPLACE_MYSQL_PORT=3000
+export INNOV24_MARKETPLACE_MYSQL_IP="10.24.4.3"
+
+# PhpMyadmin for Marketplace
+export INNOV24_MARKETPLACE_PHPMYADMIN_PORT=8080
+export INNOV24_MARKETPLACE_PHPMYADMIN_IP="10.24.4.4"

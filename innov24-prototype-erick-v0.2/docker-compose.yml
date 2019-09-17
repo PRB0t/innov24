@@ -1,0 +1,168 @@
+version: '2.3'
+
+# DEMO
+# Centraliser l'authentification
+# Consulter les analytics de l'authentification
+# S'authentifier sur le réseau social
+# Utiliser le réseau social
+# Se connecter à la place de marché
+# Constater l'authentification automatique
+# Envoyer une requête à Magento via l'ESB et obtenir la réponse dans l'affichage standard
+
+# Do `source ./config` before `docker-compose up -d`
+
+services:
+#ESB Server
+#Identity Server
+  mysql:
+    image: mysql:5.7.20
+    ports:
+      - $INNOV24_IDENTITY_MYSQL_PORT
+    environment:
+        MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./wso2is/mysql/scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-uroot", "-pwso2carbon"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+    networks:
+      identity-net:
+        ipv4_address: $INNOV24_IDENTITY_MYSQL_IP
+
+  identity-server-analytics-worker:
+    image: wso2/wso2is-analytics-worker:5.8.0
+    ports:
+      - $INNOV24_IDENTITY_ANALYTICS_WORKER1_PORT
+      - $INNOV24_IDENTITY_ANALYTICS_WORKER2_PORT
+    healthcheck:
+      test: ["CMD", "nc", "-z", "$INNOV24_IDENTITY_ANALYTICS_WORKERS_IP", "$INNOV24_IDENTITY_ANALYTICS_WORKER1_PORT"]
+      interval: 20s
+      timeout: 120s
+      retries: 5
+    networks:
+      identity-net:
+        ipv4_address: $INNOV24_IDENTITY_ANALYTICS_WORKERS_IP
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./wso2is/identity-server-analytics-worker:/home/wso2carbon/wso2-config-volume
+
+
+  identity-server-analytics-dashboard:
+    image: wso2/wso2is-analytics-dashboard:5.8.0
+    ports:
+      - $INNOV24_IDENTITY_ANALYTICS_DASHBOARD_PORT
+    healthcheck:
+      test: ["CMD", "nc", "-z", $INNOV24_IDENTITY_ANALYTICS_DASHBOARD_IP, $INNOV24_IDENTITY_ANALYTICS_DASHBOARD_PORT]
+      interval: 10s
+      timeout: 120s
+      retries: 5
+    networks:
+      identity-net:
+        ipv4_address: $INNOV24_IDENTITY_ANALYTICS_DASHBOARD_IP
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./wso2is/identity-server-analytics-dashboard:/home/wso2carbon/wso2-config-volume
+
+
+  identity-server:
+    image: wso2/wso2is:5.8.0
+    ports:
+      - $INNOV24_IDENTITY_PORT_UNSECURE
+      - $INNOV24_IDENTITY_PORT_SECURE
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-f", "https://$INNOV24_IDENTITY_IP:$INNOV24_IDENTITY_PORT_SECURE/carbon/admin/login.jsp"]
+      interval: 5s
+      timeout: 120s
+    networks:
+      identity-net:
+        ipv4_address: $INNOV24_IDENTITY_IP
+    volumes:
+      - ./wso2is/identity-server:/home/wso2carbon/wso2-config-volume
+    depends_on:
+      mysql:
+        condition: service_healthy
+      identity-server-analytics-worker:
+        condition: service_healthy
+      identity-server-analytics-dashboard:
+        condition: service_healthy
+
+
+#Social Network
+  socialnetwork:
+    build: drupal/.
+    networks:
+      socialnetwork-net:
+        ipv4_address: $INNOV24_SOCIALNETWORK_IP
+    ports:
+      - $INNOV24_SOCIALNETWORK_PORT
+    env_file:
+      - drupal/env
+
+     
+#Marketplace
+  marketplace:
+    image: alexcheng/magento2
+    networks:
+      marketplace-net:
+        ipv4_address: $INNOV24_MARKETPLACE_IP
+    ports:
+      - $INNOV24_MARKETPLACE_PORT
+    links:
+      - db
+    env_file:
+      - magento/env
+
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    networks:
+      marketplace-net:
+        ipv4_address: $INNOV24_MARKETPLACE_PHPMYADMIN_IP
+    ports:
+      - $INNOV24_MARKETPLACE_PHPMYADMIN_PORT
+    links:
+      - db     
+
+
+  db:
+    image: mysql:5.6.23
+    networks:
+      marketplace-net:
+        ipv4_address: $INNOV24_MARKETPLACE_MYSQL_IP
+    ports:
+      - $INNOV24_MARKETPLACE_MYSQL_PORT
+    volumes:
+      - db-data:/var/lib/mysql/data
+    env_file:
+      - magento/env
+
+volumes:
+  db-data: 
+
+networks:
+  socialnetwork-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: $INNOV24_SOCIALNETWORK_NET
+  marketplace-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: $INNOV24_MARKETPLACE_NET
+  identity-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: $INNOV24_IDENTITY_NET
+  esb-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: $INNOV24_ESB_NET
