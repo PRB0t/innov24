@@ -10,7 +10,7 @@ docker stop $(docker ps -aq)
 docker rm $(docker ps -aq)
 
 #remove all images
-docker rmi $(docker images -q)
+#docker rmi $(docker images -q)
 
 #remove
 #- all stopped containers
