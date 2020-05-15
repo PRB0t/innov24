@@ -1,2 +1,1 @@
-# innov24
-A social worskpace for journalists and the innovation ecosystem!
+Failure is when you stop trying to do something.
